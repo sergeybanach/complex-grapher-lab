@@ -27,9 +27,13 @@
     <label for="colorMode">Use LAB Colors:</label>
     <input type="checkbox" id="colorMode" checked>
     <br>
-    <label for="functionInput">Function (use z):</label>
-    <input type="text" id="functionInput" value="z.pow(3)" placeholder="e.g., z.pow(3)">
-    <button id="updateFunction">Update Function</button>
+    <label for="param1Slider">Parameter 1 (Real part):</label>
+    <input type="range" id="param1Slider" min="-2" max="2" step="0.01" value="0">
+    <span id="param1Value">0.00</span>
+    <br>
+    <label for="param2Slider">Parameter 2 (Imaginary part):</label>
+    <input type="range" id="param2Slider" min="-2" max="2" step="0.01" value="0">
+    <span id="param2Value">0.00</span>
     <br>
     <div id="rangeDisplay">Range: x: [-5, 5], y: [-5, 5]</div>
     <script type="module">
@@ -38,8 +42,8 @@
 
         let lightnessMode = "arctan"; // Default mode
         let useLABColors = true; // Default to LAB colors
-        let customFunction = (z) => z.pow(3).sub(new Complex(1, -1)); 
-        // I want to animate new Complex(1, range(-1, -2)) in a minute
+        let param1 = 0; // Default value for parameter 1 (real part)
+        let param2 = 0; // Default value for parameter 2 (imaginary part)
 
         new p5((sketch) => {
             sketch.setup = () => {
@@ -58,15 +62,21 @@
                     sketch.draw();
                 });
 
-                document.getElementById("updateFunction").addEventListener("click", () => {
-                    const input = document.getElementById("functionInput").value;
-                    try {
-                        customFunction = new Function("z", "return " + input);
-                        sketch.draw();
-                    } catch (e) {
-                        console.error("Invalid function input:", e);
-                        alert("Invalid function input. Please check your syntax.");
-                    }
+                // Slider input listeners for param1 and param2
+                const param1Slider = document.getElementById("param1Slider");
+                const param1ValueDisplay = document.getElementById("param1Value");
+                param1Slider.addEventListener("input", (event) => {
+                    param1 = parseFloat(event.target.value); // Update param1
+                    param1ValueDisplay.textContent = param1.toFixed(2); // Update display
+                    sketch.draw(); // Redraw the canvas
+                });
+
+                const param2Slider = document.getElementById("param2Slider");
+                const param2ValueDisplay = document.getElementById("param2Value");
+                param2Slider.addEventListener("input", (event) => {
+                    param2 = parseFloat(event.target.value); // Update param2
+                    param2ValueDisplay.textContent = param2.toFixed(2); // Update display
+                    sketch.draw(); // Redraw the canvas
                 });
             };
 
@@ -79,8 +89,9 @@
                         let zy = sketch.map(y, 0, sketch.height, -5, 5);
                         let z = new Complex(zx, zy);
 
-                        // Compute f(z) using the custom function
-                        let fz = customFunction(z);
+                        // Compute f(z) = z^2 + (param1 + param2*i)
+                        // let fz = z.pow(4).add(new Complex(param1, param2));
+                        let fz = z.pow(new Complex(param1, param2));
 
                         // Calculate magnitude (r) and phase (arg) of f(z)
                         let r = fz.mag();
@@ -119,12 +130,12 @@
                             let labColor = [Math.round(lightness), Math.round(a), Math.round(b)];
                             let rgbColor = convert.lab.rgb(labColor);
                             rgbColor = rgbColor.map(val => Math.min(Math.max(val, 0), 255)); // Clamp RGB values
-                            sketch.colorMode(sketch.RGB);
                             col = sketch.color(rgbColor[0], rgbColor[1], rgbColor[2]);
+                            sketch.colorMode(sketch.RGB);
                         } else {
                             // Use HSL color wheel
-                            sketch.colorMode(sketch.HSB);
                             col = sketch.color(hue, 50, lightness);
+                            sketch.colorMode(sketch.HSB);
                         }
 
                         sketch.set(x, y, col);
@@ -134,7 +145,7 @@
 
                 // Update the range display
                 document.getElementById("rangeDisplay").textContent =
-                    `Range: x: [-5, 5], y: [-5, 5]`;
+                    `Range: x: [-5, 5], y: [-5, 5] | Param1: ${param1.toFixed(2)}, Param2: ${param2.toFixed(2)}`;
             };
         });
 
@@ -148,10 +159,6 @@
                 return new Complex(this.re + c.re, this.im + c.im);
             }
 
-            sub(c) {
-                return new Complex(this.re - c.re, this.im - c.im);
-            }
-
             mul(c) {
                 return new Complex(
                     this.re * c.re - this.im * c.im,
@@ -159,19 +166,10 @@
                 );
             }
 
-            pow(n) {
-                if (typeof n === "number") {
-                    let magnitude = Math.pow(this.mag(), n);
-                    let phase = this.phase() * n;
-                    return new Complex(
-                        magnitude * Math.cos(phase),
-                        magnitude * Math.sin(phase)
-                    );
-                } else if (n instanceof Complex) {
-                    return this.exp(n.mul(this.ln()));
-                } else {
-                    throw new Error("Exponent must be a number or a Complex number");
-                }
+            pow(c) {
+                // return this.exp(c.mul(this.ln()));
+                return c.mul(this.ln()).exp();
+
             }
 
             ln() {
