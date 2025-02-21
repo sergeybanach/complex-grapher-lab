@@ -28,11 +28,11 @@
     <input type="checkbox" id="colorMode" checked>
     <br>
     <label for="param1Slider">Parameter 1 (Real part):</label>
-    <input type="range" id="param1Slider" min="-2" max="2" step="0.01" value="0">
+    <input type="range" id="param1Slider" min="-4" max="4" step="0.01" value="1">
     <span id="param1Value">0.00</span>
     <br>
     <label for="param2Slider">Parameter 2 (Imaginary part):</label>
-    <input type="range" id="param2Slider" min="-2" max="2" step="0.01" value="0">
+    <input type="range" id="param2Slider" min="-4" max="4" step="0.01" value="0">
     <span id="param2Value">0.00</span>
     <br>
     <div id="rangeDisplay">Range: x: [-5, 5], y: [-5, 5]</div>
@@ -42,7 +42,7 @@
 
         let lightnessMode = "arctan"; // Default mode
         let useLABColors = true; // Default to LAB colors
-        let param1 = 0; // Default value for parameter 1 (real part)
+        let param1 = 1; // Default value for parameter 1 (real part)
         let param2 = 0; // Default value for parameter 2 (imaginary part)
 
         new p5((sketch) => {
@@ -65,6 +65,7 @@
                 // Slider input listeners for param1 and param2
                 const param1Slider = document.getElementById("param1Slider");
                 const param1ValueDisplay = document.getElementById("param1Value");
+                param1ValueDisplay.textContent = param1.toFixed(2);
                 param1Slider.addEventListener("input", (event) => {
                     param1 = parseFloat(event.target.value); // Update param1
                     param1ValueDisplay.textContent = param1.toFixed(2); // Update display
@@ -73,6 +74,7 @@
 
                 const param2Slider = document.getElementById("param2Slider");
                 const param2ValueDisplay = document.getElementById("param2Value");
+                param2ValueDisplay.textContent = param2.toFixed(2);
                 param2Slider.addEventListener("input", (event) => {
                     param2 = parseFloat(event.target.value); // Update param2
                     param2ValueDisplay.textContent = param2.toFixed(2); // Update display
