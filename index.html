@@ -15,11 +15,14 @@
         <option value="n3">r³/(r³ + 1)</option>
         <option value="n4">r⁴/(r⁴ + 1)</option>
     </select>
+    <label for="colorMode">Use LAB Colors:</label>
+    <input type="checkbox" id="colorMode" checked>
     <script type="module">
         import p5 from "p5";
         import convert from "color-convert";
 
         let lightnessMode = "arctan"; // Default mode
+        let useLABColors = true; // Default to LAB colors
 
         new p5((sketch) => {
             sketch.setup = () => {
@@ -30,6 +33,12 @@
                 // Add event listener for the switcher
                 document.getElementById("switcher").addEventListener("change", function (event) {
                     lightnessMode = event.target.value;
+                    sketch.draw(); // Redraw the canvas when the mode changes
+                });
+
+                // Add event listener for the color mode toggle
+                document.getElementById("colorMode").addEventListener("change", function (event) {
+                    useLABColors = event.target.checked;
                     sketch.draw(); // Redraw the canvas when the mode changes
                 });
             };
@@ -44,19 +53,13 @@
                         let z = new Complex(zx, zy);
 
                         // Compute f(z) = z^3 - 1
-                        let fz;
-                        // let fz = z.pow(3).sub(new Complex(1, 0));
-                        fz = z;
-                        // let e = new Complex(Math.E, 0);
-                        // let fz = e.pow();
-                        fz = z.pow(3);
+                        let fz = z.pow(3);
 
                         // Calculate magnitude (r) and phase (arg) of f(z)
                         let r = fz.mag();
                         let phase = fz.phase();
 
                         // Map phase to hue: arg(z) + 2π/3
-                        // let hue = sketch.map(phase + (2 * Math.PI / 3), -Math.PI, Math.PI, 0, 360);
                         let hue = sketch.map(phase, -Math.PI, Math.PI, 0, 360);
 
                         // Calculate lightness based on the selected mode
@@ -81,15 +84,21 @@
                                 lightness = 50; // Fallback
                         }
 
-                        // Convert LAB to RGB
-                        let a = sketch.map(phase, -Math.PI, Math.PI, -128, 128); // Map phase to a*
-                        let b = sketch.map(phase, -Math.PI, Math.PI, -128, 128); // Map phase to b*
+                        let col;
+                        if (useLABColors) {
+                            // Convert LAB to RGB
+                            let a = sketch.map(phase, -Math.PI, Math.PI, -128, 128); // Map phase to a*
+                            let b = sketch.map(phase, -Math.PI, Math.PI, -128, 128); // Map phase to b*
 
-                        let labColor = [lightness, a, b]; // L* = lightness, a* = 0, b* = 0
-                        let rgbColor = convert.lab.rgb(labColor);
+                            let labColor = [lightness, a, b]; // L* = lightness, a* = 0, b* = 0
+                            let rgbColor = convert.lab.rgb(labColor);
 
-                        // Set the pixel color using RGB
-                        let col = sketch.color(rgbColor[0], rgbColor[1], rgbColor[2]);
+                            // Set the pixel color using RGB
+                            col = sketch.color(rgbColor[0], rgbColor[1], rgbColor[2]);
+                        } else {
+                            // Use color wheel colors (HSL)
+                            col = sketch.color(hue, 100, lightness);
+                        }
 
                         sketch.set(x, y, col);
                     }
