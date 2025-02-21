@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Complex Function Visualization with LAB</title>
+</head>
+
+<body>
+    <select id="switcher">
+        <option value="arctan">2/π * arctan(r)</option>
+        <option value="n1">r/(r + 1)</option>
+        <option value="n2">r²/(r² + 1)</option>
+        <option value="n3">r³/(r³ + 1)</option>
+        <option value="n4">r⁴/(r⁴ + 1)</option>
+    </select>
+    <script type="module">
+        import p5 from "p5";
+        import convert from "color-convert";
+
+        let lightnessMode = "arctan"; // Default mode
+
+        new p5((sketch) => {
+            sketch.setup = () => {
+                sketch.createCanvas(800, 800);
+                sketch.pixelDensity(1);
+                sketch.noLoop();
+
+                // Add event listener for the switcher
+                document.getElementById("switcher").addEventListener("change", function (event) {
+                    lightnessMode = event.target.value;
+                    sketch.draw(); // Redraw the canvas when the mode changes
+                });
+            };
+
+            sketch.draw = () => {
+                sketch.loadPixels();
+                for (let x = 0; x < sketch.width; x++) {
+                    for (let y = 0; y < sketch.height; y++) {
+                        // Map pixel position to a complex number z
+                        let zx = sketch.map(x, 0, sketch.width, -20, 20);
+                        let zy = sketch.map(y, 0, sketch.height, -20, 20);
+                        let z = new Complex(zx, zy);
+
+                        // Compute f(z) = z^3 - 1
+                        let fz;
+                        // let fz = z.pow(3).sub(new Complex(1, 0));
+                        fz = z;
+                        // let e = new Complex(Math.E, 0);
+                        // let fz = e.pow();
+                        fz = z.pow(3);
+
+                        // Calculate magnitude (r) and phase (arg) of f(z)
+                        let r = fz.mag();
+                        let phase = fz.phase();
+
+                        // Map phase to hue: arg(z) + 2π/3
+                        // let hue = sketch.map(phase + (2 * Math.PI / 3), -Math.PI, Math.PI, 0, 360);
+                        let hue = sketch.map(phase, -Math.PI, Math.PI, 0, 360);
+
+                        // Calculate lightness based on the selected mode
+                        let lightness;
+                        switch (lightnessMode) {
+                            case "arctan":
+                                lightness = sketch.map((2 / Math.PI) * Math.atan(r), 0, 1, 0, 100);
+                                break;
+                            case "n1":
+                                lightness = sketch.map(r / (r + 1), 0, 1, 0, 100);
+                                break;
+                            case "n2":
+                                lightness = sketch.map((r * r) / (r * r + 1), 0, 1, 0, 100);
+                                break;
+                            case "n3":
+                                lightness = sketch.map((r * r * r) / (r * r * r + 1), 0, 1, 0, 100);
+                                break;
+                            case "n4":
+                                lightness = sketch.map((r * r * r * r) / (r * r * r * r + 1), 0, 1, 0, 100);
+                                break;
+                            default:
+                                lightness = 50; // Fallback
+                        }
+
+                        // Convert LAB to RGB
+                        let a = sketch.map(phase, -Math.PI, Math.PI, -128, 128); // Map phase to a*
+                        let b = sketch.map(phase, -Math.PI, Math.PI, -128, 128); // Map phase to b*
+
+                        let labColor = [lightness, a, b]; // L* = lightness, a* = 0, b* = 0
+                        let rgbColor = convert.lab.rgb(labColor);
+
+                        // Set the pixel color using RGB
+                        let col = sketch.color(rgbColor[0], rgbColor[1], rgbColor[2]);
+
+                        sketch.set(x, y, col);
+                    }
+                }
+                sketch.updatePixels();
+            };
+        });
+
+        class Complex {
+            constructor(re, im) {
+                this.re = re;
+                this.im = im;
+            }
+
+            add(c) {
+                return new Complex(this.re + c.re, this.im + c.im);
+            }
+
+            sub(c) {
+                return new Complex(this.re - c.re, this.im - c.im);
+            }
+
+            mul(c) {
+                return new Complex(
+                    this.re * c.re - this.im * c.im,
+                    this.re * c.im + this.im * c.re
+                );
+            }
+
+            pow(n) {
+                let result = new Complex(1, 0);
+                for (let i = 0; i < n; i++) {
+                    result = result.mul(this);
+                }
+                return result;
+            }
+
+            phase() {
+                return Math.atan2(this.im, this.re);
+            }
+
+            mag() {
+                return Math.sqrt(this.re * this.re + this.im * this.im);
+            }
+        }
+    </script>
+</body>
+
+</html>
