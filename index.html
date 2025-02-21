@@ -7,9 +7,6 @@
     <title>Complex Function Visualization with LAB</title>
     <style>
         #rangeDisplay {
-            position: absolute;
-            top: 10px;
-            right: 10px;
             background: rgba(255, 255, 255, 0.8);
             padding: 5px;
             border-radius: 5px;
@@ -34,121 +31,62 @@
     <input type="text" id="functionInput" value="z.pow(3)" placeholder="e.g., z.pow(3)">
     <button id="updateFunction">Update Function</button>
     <br>
-    <div id="rangeDisplay">Range: x: [-20, 20], y: [-20, 20]</div>
+    <div id="rangeDisplay">Range: x: [-5, 5], y: [-5, 5]</div>
     <script type="module">
         import p5 from "p5";
         import convert from "color-convert";
 
         let lightnessMode = "arctan"; // Default mode
-        let useLABColors = false; // 
-        let customFunction = (z) => z; // Default function
-
-        // Zoom and pan variables
-        let zoom = 1.0;
-        let panX = 0.0;
-        let panY = 0.0;
-        let isDragging = false;
-        let lastMouseX, lastMouseY;
+        let useLABColors = true; // Default to LAB colors
+        let customFunction = (z) => z.pow(3).sub(new Complex(1, -1)); 
+        // I want to animate new Complex(1, range(-1, -2)) in a minute
 
         new p5((sketch) => {
             sketch.setup = () => {
-                sketch.createCanvas(800, 800);
+                sketch.createCanvas(200, 200);
                 sketch.pixelDensity(1);
                 sketch.noLoop();
-                
 
-                // Add event listener for the switcher
-                document.getElementById("switcher").addEventListener("change", function (event) {
+                // Event listeners
+                document.getElementById("switcher").addEventListener("change", (event) => {
                     lightnessMode = event.target.value;
-                    sketch.draw(); // Redraw the canvas when the mode changes
+                    sketch.draw();
                 });
 
-                // Add event listener for the color mode toggle
-                document.getElementById("colorMode").addEventListener("change", function (event) {
+                document.getElementById("colorMode").addEventListener("change", (event) => {
                     useLABColors = event.target.checked;
-                    sketch.draw(); // Redraw the canvas when the mode changes
+                    sketch.draw();
                 });
 
-                // Add event listener for the function input
-                document.getElementById("updateFunction").addEventListener("click", function () {
+                document.getElementById("updateFunction").addEventListener("click", () => {
                     const input = document.getElementById("functionInput").value;
                     try {
-                        // Dynamically create a function from the input
                         customFunction = new Function("z", "return " + input);
-                        sketch.draw(); // Redraw the canvas with the new function
+                        sketch.draw();
                     } catch (e) {
                         console.error("Invalid function input:", e);
                         alert("Invalid function input. Please check your syntax.");
                     }
                 });
-
-                // Mouse wheel for zooming
-                // sketch.mouseWheel = (event) => {
-                //     const zoomFactor = 1.1;
-                //     const mouseX = sketch.mouseX;
-                //     const mouseY = sketch.mouseY;
-
-                //     // Calculate the new zoom level
-                //     if (event.delta < 0) {
-                //         zoom *= zoomFactor;
-                //     } else {
-                //         zoom /= zoomFactor;
-                //     }
-
-                //     // Adjust pan to zoom towards the mouse position
-                //     panX = (panX - mouseX) * zoomFactor + mouseX;
-                //     panY = (panY - mouseY) * zoomFactor + mouseY;
-
-                //     sketch.draw(); // Redraw the canvas
-                // };
-
-                // Mouse dragging for panning
-                // sketch.mousePressed = () => {
-                //     isDragging = true;
-                //     lastMouseX = sketch.mouseX;
-                //     lastMouseY = sketch.mouseY;
-                // };
-
-                // sketch.mouseReleased = () => {
-                //     isDragging = false;
-                // };
-
-                // sketch.mouseDragged = () => {
-                //     if (isDragging) {
-                //         const dx = sketch.mouseX - lastMouseX;
-                //         const dy = sketch.mouseY - lastMouseY;
-                //         panX += dx;
-                //         panY += dy;
-                //         lastMouseX = sketch.mouseX;
-                //         lastMouseY = sketch.mouseY;
-                //         sketch.draw(); // Redraw the canvas
-                //     }
-                // };
             };
 
             sketch.draw = () => {
                 sketch.loadPixels();
                 for (let x = 0; x < sketch.width; x++) {
                     for (let y = 0; y < sketch.height; y++) {
-                        // Map pixel position to a complex number z, accounting for zoom and pan
-                        let zx = sketch.map(x, 0, sketch.width, -20 / zoom + panX / zoom, 20 / zoom + panX / zoom);
-                        let zy = sketch.map(y, 0, sketch.height, -20 / zoom + panY / zoom, 20 / zoom + panY / zoom);
+                        // Map pixel position to a complex number z
+                        let zx = sketch.map(x, 0, sketch.width, -5, 5);
+                        let zy = sketch.map(y, 0, sketch.height, -5, 5);
                         let z = new Complex(zx, zy);
 
                         // Compute f(z) using the custom function
-                        let fz;
-                        try {
-                            fz = customFunction(z);
-                        } catch (e) {
-                            console.error("Error evaluating function:", e);
-                            fz = new Complex(0, 0); // Fallback to avoid crashing
-                        }
+                        let fz = customFunction(z);
 
                         // Calculate magnitude (r) and phase (arg) of f(z)
                         let r = fz.mag();
                         let phase = fz.phase();
 
-                        // Map phase to hue: arg(z) + 2π/3
+                        // Map phase to hue
                         let hue = sketch.map(phase, -Math.PI, Math.PI, 0, 360);
 
                         // Calculate lightness based on the selected mode
@@ -176,19 +114,17 @@
                         let col;
                         if (useLABColors) {
                             // Convert LAB to RGB
-                            let a = sketch.map(phase, -Math.PI, Math.PI, 0, 255); // Map phase to a*
-                            let b = sketch.map(phase, -Math.PI, Math.PI, 0, 255); // Map phase to b*
-                            sketch.colorMode(sketch.RGB, 255)
-
-                            let labColor = [lightness, a, b]; // L* = lightness, a* = 0, b* = 0
+                            let a = 100 * Math.cos(phase); // a* ranges from -100 to 100
+                            let b = 100 * Math.sin(phase); // b* ranges from -100 to 100
+                            let labColor = [Math.round(lightness), Math.round(a), Math.round(b)];
                             let rgbColor = convert.lab.rgb(labColor);
-
-                            // Set the pixel color using RGB
+                            rgbColor = rgbColor.map(val => Math.min(Math.max(val, 0), 255)); // Clamp RGB values
+                            sketch.colorMode(sketch.RGB);
                             col = sketch.color(rgbColor[0], rgbColor[1], rgbColor[2]);
                         } else {
-                            // Use color wheel colors (HSL)
-                            sketch.colorMode(sketch.HSB)
-                            col = sketch.color(hue, 100, lightness);
+                            // Use HSL color wheel
+                            sketch.colorMode(sketch.HSB);
+                            col = sketch.color(hue, 50, lightness);
                         }
 
                         sketch.set(x, y, col);
@@ -197,12 +133,8 @@
                 sketch.updatePixels();
 
                 // Update the range display
-                const xMin = -20 / zoom + panX / zoom;
-                const xMax = 20 / zoom + panX / zoom;
-                const yMin = -20 / zoom + panY / zoom;
-                const yMax = 20 / zoom + panY / zoom;
                 document.getElementById("rangeDisplay").textContent =
-                    `Range: x: [${xMin.toFixed(2)}, ${xMax.toFixed(2)}], y: [${yMin.toFixed(2)}, ${yMax.toFixed(2)}]`;
+                    `Range: x: [-5, 5], y: [-5, 5]`;
             };
         });
 
@@ -228,11 +160,33 @@
             }
 
             pow(n) {
-                let result = new Complex(1, 0);
-                for (let i = 0; i < n; i++) {
-                    result = result.mul(this);
+                if (typeof n === "number") {
+                    let magnitude = Math.pow(this.mag(), n);
+                    let phase = this.phase() * n;
+                    return new Complex(
+                        magnitude * Math.cos(phase),
+                        magnitude * Math.sin(phase)
+                    );
+                } else if (n instanceof Complex) {
+                    return this.exp(n.mul(this.ln()));
+                } else {
+                    throw new Error("Exponent must be a number or a Complex number");
                 }
-                return result;
+            }
+
+            ln() {
+                return new Complex(
+                    Math.log(this.mag()),
+                    this.phase()
+                );
+            }
+
+            exp() {
+                const expReal = Math.exp(this.re);
+                return new Complex(
+                    expReal * Math.cos(this.im),
+                    expReal * Math.sin(this.im)
+                );
             }
 
             phase() {
