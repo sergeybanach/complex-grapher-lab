@@ -35,6 +35,14 @@
     <input type="range" id="param2Slider" min="-4" max="4" step="0.01" value="0">
     <span id="param2Value">0.00</span>
     <br>
+    <label for="param3Slider">Parameter 3 (Real part):</label>
+    <input type="range" id="param3Slider" min="-4" max="4" step="0.01" value="1">
+    <span id="param3Value">0.00</span>
+    <br>
+    <label for="param4Slider">Parameter 4 (Imaginary part):</label>
+    <input type="range" id="param4Slider" min="-4" max="4" step="0.01" value="0">
+    <span id="param4Value">0.00</span>
+    <br>
     <div id="rangeDisplay">Range: x: [-5, 5], y: [-5, 5]</div>
     <script type="module">
         import p5 from "p5";
@@ -44,6 +52,8 @@
         let useLABColors = true; // Default to LAB colors
         let param1 = 1; // Default value for parameter 1 (real part)
         let param2 = 0; // Default value for parameter 2 (imaginary part)
+        let param3 = 0; // Default value for parameter 1 (real part)
+        let param4 = 0; // Default value for parameter 2 (imaginary part)
 
         new p5((sketch) => {
             sketch.setup = () => {
@@ -80,6 +90,24 @@
                     param2ValueDisplay.textContent = param2.toFixed(2); // Update display
                     sketch.draw(); // Redraw the canvas
                 });
+
+                const param3Slider = document.getElementById("param3Slider");
+                const param3ValueDisplay = document.getElementById("param3Value");
+                param3ValueDisplay.textContent = param3.toFixed(2);
+                param3Slider.addEventListener("input", (event) => {
+                    param3 = parseFloat(event.target.value); // Update param2
+                    param3ValueDisplay.textContent = param3.toFixed(2); // Update display
+                    sketch.draw(); // Redraw the canvas
+                });
+
+                const param4Slider = document.getElementById("param4Slider");
+                const param4ValueDisplay = document.getElementById("param4Value");
+                param4ValueDisplay.textContent = param4.toFixed(2);
+                param4Slider.addEventListener("input", (event) => {
+                    param4 = parseFloat(event.target.value); // Update param2
+                    param4ValueDisplay.textContent = param4.toFixed(2); // Update display
+                    sketch.draw(); // Redraw the canvas
+                });
             };
 
             sketch.draw = () => {
@@ -87,13 +115,13 @@
                 for (let x = 0; x < sketch.width; x++) {
                     for (let y = 0; y < sketch.height; y++) {
                         // Map pixel position to a complex number z
-                        let zx = sketch.map(x, 0, sketch.width, -5, 5);
-                        let zy = sketch.map(y, 0, sketch.height, -5, 5);
+                        let zx = sketch.map(x, 0, sketch.width, -150, 150);
+                        let zy = sketch.map(y, 0, sketch.height, -150, 150);
                         let z = new Complex(zx, zy);
 
                         // Compute f(z) = z^2 + (param1 + param2*i)
-                        // let fz = z.pow(4).add(new Complex(param1, param2));
-                        let fz = z.pow(new Complex(param1, param2));
+                        let fz = z.pow(new Complex(param1, param2)).add(new Complex(param3, param4));
+                        // let fz = z.mul(new Complex(param1, param2));
 
                         // Calculate magnitude (r) and phase (arg) of f(z)
                         let r = fz.mag();
