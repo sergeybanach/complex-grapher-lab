@@ -185,6 +185,14 @@
                     param4ValueDisplay.textContent = param4.toFixed(2);
                     sketch.draw();
                 });
+
+                document.getElementById("updateDomain").addEventListener("click", () => {
+                    domainXMin = parseFloat(document.getElementById("domainXMin").value);
+                    domainXMax = parseFloat(document.getElementById("domainXMax").value);
+                    domainYMin = parseFloat(document.getElementById("domainYMin").value);
+                    domainYMax = parseFloat(document.getElementById("domainYMax").value);
+                    sketch.draw();
+                });
             };
 
             sketch.draw = () => {
@@ -265,14 +273,6 @@
                 document.getElementById("rangeDisplay").textContent =
                     `Range: x: [${domainXMin}, ${domainXMax}], y: [${domainYMin}, ${domainYMax}] | Param1: ${param1.toFixed(2)}, Param2: ${param2.toFixed(2)}`;
             };
-        });
-
-        document.getElementById("updateDomain").addEventListener("click", () => {
-            domainXMin = parseFloat(document.getElementById("domainXMin").value);
-            domainXMax = parseFloat(document.getElementById("domainXMax").value);
-            domainYMin = parseFloat(document.getElementById("domainYMin").value);
-            domainYMax = parseFloat(document.getElementById("domainYMax").value);
-            sketch.draw();
         });
     </script>
 </body>
