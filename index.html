@@ -17,6 +17,7 @@
 </head>
 
 <body>
+    <div>Complex Grapher</div>
     <select id="switcher">
         <option value="arctan">2/π * arctan(r)</option>
         <option value="n1">r/(r + 1)</option>
@@ -26,6 +27,10 @@
     </select>
     <label for="colorMode">Use LAB Colors:</label>
     <input type="checkbox" id="colorMode" checked>
+    <br>
+    <label for="customFunction">Custom Function (e.g., "z.pow(new Complex(param1, 3))"):</label>
+    <input type="text" id="customFunction" placeholder="Enter custom function">
+    <button id="submitCustomFunction">Submit</button>
     <br>
     <label for="param1Slider">Parameter 1 (Real part):</label>
     <input type="range" id="param1Slider" min="-4" max="4" step="0.01" value="1">
@@ -52,8 +57,54 @@
         let useLABColors = true; // Default to LAB colors
         let param1 = 1; // Default value for parameter 1 (real part)
         let param2 = 0; // Default value for parameter 2 (imaginary part)
-        let param3 = 0; // Default value for parameter 1 (real part)
-        let param4 = 0; // Default value for parameter 2 (imaginary part)
+        let param3 = 0; // Default value for parameter 3 (real part)
+        let param4 = 0; // Default value for parameter 4 (imaginary part)
+        let customFunction = null; // Store the custom function
+
+        class Complex {
+            constructor(re, im) {
+                this.re = re;
+                this.im = im;
+            }
+
+            add(c) {
+                return new Complex(this.re + c.re, this.im + c.im);
+            }
+
+            mul(c) {
+                return new Complex(
+                    this.re * c.re - this.im * c.im,
+                    this.re * c.im + this.im * c.re
+                );
+            }
+
+            pow(c) {
+                return c.mul(this.ln()).exp();
+            }
+
+            ln() {
+                return new Complex(
+                    Math.log(this.mag()),
+                    this.phase()
+                );
+            }
+
+            exp() {
+                const expReal = Math.exp(this.re);
+                return new Complex(
+                    expReal * Math.cos(this.im),
+                    expReal * Math.sin(this.im)
+                );
+            }
+
+            phase() {
+                return Math.atan2(this.im, this.re);
+            }
+
+            mag() {
+                return Math.sqrt(this.re * this.re + this.im * this.im);
+            }
+        }
 
         new p5((sketch) => {
             sketch.setup = () => {
@@ -72,41 +123,54 @@
                     sketch.draw();
                 });
 
-                // Slider input listeners for param1 and param2
+                // Custom function input listener
+                document.getElementById("submitCustomFunction").addEventListener("click", (event) => {
+                    const functionText = document.getElementById("customFunction").value;
+                    try {
+                        // Parse the custom function with Complex class and parameters as arguments
+                        customFunction = new Function("z", "Complex", "param1", "param2", "param3", "param4", "return " + functionText);
+                        sketch.draw();
+                    } catch (e) {
+                        console.error("Invalid function:", e);
+                        customFunction = null;
+                    }
+                });
+
+                // Slider input listeners for parameters
                 const param1Slider = document.getElementById("param1Slider");
                 const param1ValueDisplay = document.getElementById("param1Value");
                 param1ValueDisplay.textContent = param1.toFixed(2);
                 param1Slider.addEventListener("input", (event) => {
-                    param1 = parseFloat(event.target.value); // Update param1
-                    param1ValueDisplay.textContent = param1.toFixed(2); // Update display
-                    sketch.draw(); // Redraw the canvas
+                    param1 = parseFloat(event.target.value);
+                    param1ValueDisplay.textContent = param1.toFixed(2);
+                    sketch.draw();
                 });
 
                 const param2Slider = document.getElementById("param2Slider");
                 const param2ValueDisplay = document.getElementById("param2Value");
                 param2ValueDisplay.textContent = param2.toFixed(2);
                 param2Slider.addEventListener("input", (event) => {
-                    param2 = parseFloat(event.target.value); // Update param2
-                    param2ValueDisplay.textContent = param2.toFixed(2); // Update display
-                    sketch.draw(); // Redraw the canvas
+                    param2 = parseFloat(event.target.value);
+                    param2ValueDisplay.textContent = param2.toFixed(2);
+                    sketch.draw();
                 });
 
                 const param3Slider = document.getElementById("param3Slider");
                 const param3ValueDisplay = document.getElementById("param3Value");
                 param3ValueDisplay.textContent = param3.toFixed(2);
                 param3Slider.addEventListener("input", (event) => {
-                    param3 = parseFloat(event.target.value); // Update param2
-                    param3ValueDisplay.textContent = param3.toFixed(2); // Update display
-                    sketch.draw(); // Redraw the canvas
+                    param3 = parseFloat(event.target.value);
+                    param3ValueDisplay.textContent = param3.toFixed(2);
+                    sketch.draw();
                 });
 
                 const param4Slider = document.getElementById("param4Slider");
                 const param4ValueDisplay = document.getElementById("param4Value");
                 param4ValueDisplay.textContent = param4.toFixed(2);
                 param4Slider.addEventListener("input", (event) => {
-                    param4 = parseFloat(event.target.value); // Update param2
-                    param4ValueDisplay.textContent = param4.toFixed(2); // Update display
-                    sketch.draw(); // Redraw the canvas
+                    param4 = parseFloat(event.target.value);
+                    param4ValueDisplay.textContent = param4.toFixed(2);
+                    sketch.draw();
                 });
             };
 
@@ -115,13 +179,24 @@
                 for (let x = 0; x < sketch.width; x++) {
                     for (let y = 0; y < sketch.height; y++) {
                         // Map pixel position to a complex number z
-                        let zx = sketch.map(x, 0, sketch.width, -150, 150);
-                        let zy = sketch.map(y, 0, sketch.height, -150, 150);
+                        let zx = sketch.map(x, 0, sketch.width, -5, 5);
+                        let zy = sketch.map(y, 0, sketch.height, -5, 5);
                         let z = new Complex(zx, zy);
 
-                        // Compute f(z) = z^2 + (param1 + param2*i)
-                        let fz = z.pow(new Complex(param1, param2)).add(new Complex(param3, param4));
-                        // let fz = z.mul(new Complex(param1, param2));
+                        // Compute f(z) based on custom function or default
+                        let fz;
+                        if (customFunction) {
+                            try {
+                                // Pass z, Complex class, and parameters to the custom function
+                                fz = customFunction(z, Complex, param1, param2, param3, param4);
+                            } catch (e) {
+                                console.error("Error evaluating custom function:", e);
+                                fz = new Complex(0, 0);
+                            }
+                        } else {
+                            // Default function: z^2 + (param1 + param2*i)
+                            fz = z.pow(new Complex(param1, param2)).add(new Complex(param3, param4));
+                        }
 
                         // Calculate magnitude (r) and phase (arg) of f(z)
                         let r = fz.mag();
@@ -178,53 +253,6 @@
                     `Range: x: [-5, 5], y: [-5, 5] | Param1: ${param1.toFixed(2)}, Param2: ${param2.toFixed(2)}`;
             };
         });
-
-        class Complex {
-            constructor(re, im) {
-                this.re = re;
-                this.im = im;
-            }
-
-            add(c) {
-                return new Complex(this.re + c.re, this.im + c.im);
-            }
-
-            mul(c) {
-                return new Complex(
-                    this.re * c.re - this.im * c.im,
-                    this.re * c.im + this.im * c.re
-                );
-            }
-
-            pow(c) {
-                // return this.exp(c.mul(this.ln()));
-                return c.mul(this.ln()).exp();
-
-            }
-
-            ln() {
-                return new Complex(
-                    Math.log(this.mag()),
-                    this.phase()
-                );
-            }
-
-            exp() {
-                const expReal = Math.exp(this.re);
-                return new Complex(
-                    expReal * Math.cos(this.im),
-                    expReal * Math.sin(this.im)
-                );
-            }
-
-            phase() {
-                return Math.atan2(this.im, this.re);
-            }
-
-            mag() {
-                return Math.sqrt(this.re * this.re + this.im * this.im);
-            }
-        }
     </script>
 </body>
 
