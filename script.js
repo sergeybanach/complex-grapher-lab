@@ -56,6 +56,32 @@ class Complex {
     mag() {
         return Math.sqrt(this.re * this.re + this.im * this.im);
     }
+
+    // Method to get the real part
+    re() {
+        return this.re;
+    }
+
+    // Method to get the imaginary part
+    im() {
+        return this.im;
+    }
+
+    // Method to get the string representation
+    toString() {
+        return `${this.re} + ${this.im}i`;
+    }
+
+    // Method to get the additive inverse
+    neg() {
+        return new Complex(-this.re, -this.im);
+    }
+
+    // Method to get the multiplicative inverse
+    inv() {
+        const denominator = this.re * this.re + this.im * this.im;
+        return new Complex(this.re / denominator, -this.im / denominator);
+    }
 }
 
 const sketch = new p5((sketch) => {
