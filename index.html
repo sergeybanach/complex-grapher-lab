@@ -48,6 +48,15 @@
     <input type="range" id="param4Slider" min="-4" max="4" step="0.01" value="0">
     <span id="param4Value">0.00</span>
     <br>
+    <label for="domainXMin">Domain X Min:</label>
+    <input type="number" id="domainXMin" value="-5" step="0.1">
+    <label for="domainXMax">Domain X Max:</label>
+    <input type="number" id="domainXMax" value="5" step="0.1">
+    <label for="domainYMin">Domain Y Min:</label>
+    <input type="number" id="domainYMin" value="-5" step="0.1">
+    <label for="domainYMax">Domain Y Max:</label>
+    <input type="number" id="domainYMax" value="5" step="0.1">
+    <button id="updateDomain">Update Domain</button>
     <div id="rangeDisplay">Range: x: [-5, 5], y: [-5, 5]</div>
     <script type="module">
         import p5 from "p5";
@@ -60,6 +69,10 @@
         let param3 = 0; // Default value for parameter 3 (real part)
         let param4 = 0; // Default value for parameter 4 (imaginary part)
         let customFunction = null; // Store the custom function
+        let domainXMin = -5;
+        let domainXMax = 5;
+        let domainYMin = -5;
+        let domainYMax = 5;
 
         class Complex {
             constructor(re, im) {
@@ -106,7 +119,7 @@
             }
         }
 
-        new p5((sketch) => {
+        const sketch = new p5((sketch) => {
             sketch.setup = () => {
                 sketch.createCanvas(200, 200);
                 sketch.pixelDensity(1);
@@ -179,8 +192,8 @@
                 for (let x = 0; x < sketch.width; x++) {
                     for (let y = 0; y < sketch.height; y++) {
                         // Map pixel position to a complex number z
-                        let zx = sketch.map(x, 0, sketch.width, -5, 5);
-                        let zy = sketch.map(y, 0, sketch.height, -5, 5);
+                        let zx = sketch.map(x, 0, sketch.width, domainXMin, domainXMax);
+                        let zy = sketch.map(y, 0, sketch.height, domainYMin, domainYMax);
                         let z = new Complex(zx, zy);
 
                         // Compute f(z) based on custom function or default
@@ -250,8 +263,16 @@
 
                 // Update the range display
                 document.getElementById("rangeDisplay").textContent =
-                    `Range: x: [-5, 5], y: [-5, 5] | Param1: ${param1.toFixed(2)}, Param2: ${param2.toFixed(2)}`;
+                    `Range: x: [${domainXMin}, ${domainXMax}], y: [${domainYMin}, ${domainYMax}] | Param1: ${param1.toFixed(2)}, Param2: ${param2.toFixed(2)}`;
             };
+        });
+
+        document.getElementById("updateDomain").addEventListener("click", () => {
+            domainXMin = parseFloat(document.getElementById("domainXMin").value);
+            domainXMax = parseFloat(document.getElementById("domainXMax").value);
+            domainYMin = parseFloat(document.getElementById("domainYMin").value);
+            domainYMax = parseFloat(document.getElementById("domainYMax").value);
+            sketch.draw();
         });
     </script>
 </body>
